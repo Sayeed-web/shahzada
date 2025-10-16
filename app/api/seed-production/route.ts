@@ -190,7 +190,8 @@ async function seedDatabase() {
     console.error('Seeding error:', error)
     return NextResponse.json({ 
       success: false, 
-      error: 'Failed to seed database' 
+      error: 'Failed to seed database',
+      details: error instanceof Error ? error.message : String(error)
     }, { status: 500 })
   }
 }
