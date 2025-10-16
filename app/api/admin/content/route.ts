@@ -10,11 +10,28 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const contentItems = await prisma.contentItem.findMany({
-      orderBy: { createdAt: 'desc' }
-    })
-    
-    return NextResponse.json(contentItems)
+    try {
+      const contentItems = await prisma.contentItem.findMany({
+        orderBy: { createdAt: 'desc' }
+      })
+      
+      console.log('Admin content fetch - found items:', contentItems.length)
+      return NextResponse.json(contentItems, {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+        }
+      })
+    } catch (dbError) {
+      console.error('Database error, using fallback:', dbError)
+      
+      // Use fallback storage
+      const contentStorage = global.contentStorage || []
+      return NextResponse.json(contentStorage, {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+        }
+      })
+    }
   } catch (error) {
     console.error('Admin content fetch error:', error)
     return NextResponse.json({ error: 'Failed to fetch content' }, { status: 500 })
@@ -35,33 +52,58 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Title and type are required' }, { status: 400 })
     }
 
-    const contentItem = await prisma.contentItem.create({
-      data: {
+    try {
+      const contentItem = await prisma.contentItem.create({
+        data: {
+          title: title.trim(),
+          type,
+          content: content || '',
+          url: url || null,
+          position: position || 'DASHBOARD',
+          isActive: isActive !== false
+        }
+      })
+
+      // Create audit log
+      try {
+        await prisma.auditLog.create({
+          data: {
+            userId: session.user.id,
+            action: 'CONTENT_CREATED',
+            resource: 'CONTENT',
+            resourceId: contentItem.id,
+            details: JSON.stringify({ title, type })
+          }
+        })
+      } catch (auditError) {
+        console.warn('Audit log failed:', auditError)
+      }
+
+      console.log('Content created:', contentItem.id, title)
+      return NextResponse.json(contentItem, { status: 201 })
+    } catch (dbError) {
+      console.error('Database error, using fallback storage:', dbError)
+      
+      // Use fallback storage
+      const contentStorage = global.contentStorage || []
+      const newItem = {
+        id: `temp_${Date.now()}`,
         title: title.trim(),
         type,
         content: content || '',
         url: url || null,
         position: position || 'DASHBOARD',
-        isActive: isActive !== false
+        isActive: isActive !== false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
-    })
-
-    // Create audit log
-    try {
-      await prisma.auditLog.create({
-        data: {
-          userId: session.user.id,
-          action: 'CONTENT_CREATED',
-          resource: 'CONTENT',
-          resourceId: contentItem.id,
-          details: JSON.stringify({ title, type })
-        }
-      })
-    } catch (auditError) {
-      console.warn('Audit log failed:', auditError)
+      
+      contentStorage.unshift(newItem)
+      global.contentStorage = contentStorage
+      
+      console.log('Content created in fallback:', newItem.id, title)
+      return NextResponse.json(newItem, { status: 201 })
     }
-
-    return NextResponse.json(contentItem, { status: 201 })
   } catch (error) {
     console.error('Content creation error:', error)
     return NextResponse.json(
@@ -85,20 +127,50 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'ID, title and type are required' }, { status: 400 })
     }
 
-    const contentItem = await prisma.contentItem.update({
-      where: { id },
-      data: {
+    try {
+      const contentItem = await prisma.contentItem.update({
+        where: { id },
+        data: {
+          title: title.trim(),
+          type,
+          content: content || '',
+          url: url || null,
+          position: position || 'DASHBOARD',
+          isActive: isActive !== false,
+          updatedAt: new Date()
+        }
+      })
+
+      console.log('Content updated:', id, title)
+      return NextResponse.json(contentItem)
+    } catch (dbError) {
+      console.error('Database error, using fallback storage:', dbError)
+      
+      // Use fallback storage
+      const contentStorage = global.contentStorage || []
+      const itemIndex = contentStorage.findIndex((item: any) => item.id === id)
+      
+      if (itemIndex === -1) {
+        return NextResponse.json({ error: 'Content not found' }, { status: 404 })
+      }
+      
+      const updatedItem = {
+        ...contentStorage[itemIndex],
         title: title.trim(),
         type,
         content: content || '',
         url: url || null,
         position: position || 'DASHBOARD',
         isActive: isActive !== false,
-        updatedAt: new Date()
+        updatedAt: new Date().toISOString()
       }
-    })
-
-    return NextResponse.json(contentItem)
+      
+      contentStorage[itemIndex] = updatedItem
+      global.contentStorage = contentStorage
+      
+      console.log('Content updated in fallback:', id, title)
+      return NextResponse.json(updatedItem)
+    }
   } catch (error) {
     console.error('Content update error:', error)
     return NextResponse.json(
@@ -122,11 +194,35 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Content ID is required' }, { status: 400 })
     }
 
-    await prisma.contentItem.delete({
-      where: { id }
-    })
-
-    return NextResponse.json({ success: true })
+    try {
+      await prisma.contentItem.delete({
+        where: { id }
+      })
+      
+      // Clear global cache
+      if (global.contentStorage) {
+        delete global.contentStorage
+      }
+      
+      console.log('Content deleted from database:', id)
+      return NextResponse.json({ success: true, deletedId: id })
+    } catch (dbError) {
+      console.error('Database error, using fallback storage:', dbError)
+      
+      // Use fallback storage
+      const contentStorage = global.contentStorage || []
+      const itemIndex = contentStorage.findIndex((item: any) => item.id === id)
+      
+      if (itemIndex === -1) {
+        return NextResponse.json({ error: 'Content not found' }, { status: 404 })
+      }
+      
+      contentStorage.splice(itemIndex, 1)
+      global.contentStorage = contentStorage
+      
+      console.log('Content deleted from fallback:', id)
+      return NextResponse.json({ success: true, deletedId: id })
+    }
   } catch (error) {
     console.error('Content deletion error:', error)
     return NextResponse.json(

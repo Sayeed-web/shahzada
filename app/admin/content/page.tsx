@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Globe, Plus, Edit, Trash2, Eye, Video, Facebook, ExternalLink } from 'lucide-react'
+import { Globe, Plus, Edit, Trash2, Eye, Video, Facebook, ExternalLink, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface ContentItem {
@@ -49,11 +49,17 @@ export default function AdminContentPage() {
 
   const fetchContentItems = async () => {
     try {
-      const response = await fetch('/api/admin/content')
+      const response = await fetch(`/api/admin/content?_t=${Date.now()}`, {
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      })
       if (!response.ok) throw new Error('Failed to fetch content')
       const data = await response.json()
+      console.log('Fetched content items:', data.length)
       setContentItems(data)
     } catch (error) {
+      console.error('Fetch error:', error)
       toast.error('خطا در بارگذاری محتوا')
     } finally {
       setLoading(false)
@@ -70,6 +76,8 @@ export default function AdminContentPage() {
         ? { ...formData, id: editingItem.id }
         : formData
 
+      console.log('Submitting:', method, body)
+
       const response = await fetch('/api/admin/content', {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -78,14 +86,27 @@ export default function AdminContentPage() {
 
       if (!response.ok) {
         const errorData = await response.json()
+        console.error('API Error:', errorData)
         throw new Error(errorData.error || 'Failed to save content')
+      }
+
+      const result = await response.json()
+      console.log('Save result:', result)
+      
+      // Clear cache
+      try {
+        await fetch('/api/admin/clear-content-cache', { method: 'POST' })
+      } catch (cacheError) {
+        console.warn('Cache clear failed:', cacheError)
       }
 
       toast.success(editingItem ? 'محتوا بروزرسانی شد' : 'محتوا ایجاد شد')
       setShowCreateDialog(false)
       setEditingItem(null)
       resetForm()
-      fetchContentItems()
+      
+      // Refresh content list
+      setTimeout(() => fetchContentItems(), 500)
     } catch (error) {
       console.error('Save error:', error)
       toast.error('خطا در ذخیره محتوا: ' + (error instanceof Error ? error.message : 'Unknown error'))
@@ -98,20 +119,44 @@ export default function AdminContentPage() {
     if (!confirm('آیا از حذف این محتوا اطمینان دارید؟')) return
 
     try {
+      setLoading(true)
+      
+      // First try the admin content API
       const response = await fetch(`/api/admin/content?id=${id}`, {
         method: 'DELETE'
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to delete content')
+        // Try the individual content API as fallback
+        const fallbackResponse = await fetch(`/api/admin/content/${id}`, {
+          method: 'DELETE'
+        })
+        
+        if (!fallbackResponse.ok) {
+          const errorData = await fallbackResponse.json()
+          throw new Error(errorData.error || 'Failed to delete content')
+        }
+      }
+      
+      // Clear cache
+      try {
+        await fetch('/api/admin/clear-content-cache', { method: 'POST' })
+      } catch (cacheError) {
+        console.warn('Cache clear failed:', cacheError)
       }
 
       toast.success('محتوا حذف شد')
-      fetchContentItems()
+      
+      // Remove from local state immediately
+      setContentItems(prev => prev.filter(item => item.id !== id))
+      
+      // Refresh from server
+      setTimeout(() => fetchContentItems(), 500)
     } catch (error) {
       console.error('Delete error:', error)
       toast.error('خطا در حذف محتوا: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -271,7 +316,18 @@ export default function AdminContentPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>محتوای موجود ({contentItems.length})</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>محتوای موجود ({contentItems.length})</CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => fetchContentItems()}
+                disabled={loading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                بروزرسانی
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (
