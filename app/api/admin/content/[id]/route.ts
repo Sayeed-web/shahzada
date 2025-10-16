@@ -108,6 +108,13 @@ export async function DELETE(
       await prisma.contentItem.delete({
         where: { id: contentId }
       })
+      
+      // Clear any global cache
+      if (global.contentStorage) {
+        delete global.contentStorage
+      }
+      
+      console.log(`Content item deleted: ${contentId} - ${contentItem.title}`)
 
       // Log the action
       try {
@@ -124,7 +131,15 @@ export async function DELETE(
         console.warn('Failed to create audit log:', auditError)
       }
 
-      return NextResponse.json({ success: true })
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Content deleted successfully',
+        deletedId: contentId 
+      }, {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+        }
+      })
     } catch (dbError) {
       console.error('Database error in content deletion:', dbError)
       
@@ -136,10 +151,21 @@ export async function DELETE(
         return NextResponse.json({ error: 'Content not found' }, { status: 404 })
       }
       
+      const deletedItem = contentStorage[itemIndex]
       contentStorage.splice(itemIndex, 1)
       global.contentStorage = contentStorage
       
-      return NextResponse.json({ success: true })
+      console.log(`Content item deleted from fallback: ${contentId} - ${deletedItem.title}`)
+      
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Content deleted successfully (fallback)',
+        deletedId: contentId 
+      }, {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+        }
+      })
     }
   } catch (error) {
     console.error('Content deletion error:', error)

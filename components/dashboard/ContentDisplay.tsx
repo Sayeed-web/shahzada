@@ -27,10 +27,25 @@ export function ContentDisplay() {
 
   useEffect(() => {
     fetchContent()
-    // Refresh content every 5 seconds for immediate updates
-    const interval = setInterval(fetchContent, 5000)
-    return () => clearInterval(interval)
-  }, [])
+    
+    // Refresh content every 30 seconds to avoid rate limits
+    const interval = setInterval(() => fetchContent(), 30000)
+    
+    // Refresh when window gains focus (user returns to tab)
+    const handleFocus = () => {
+      const timeSinceLastFetch = Date.now() - lastFetch
+      if (timeSinceLastFetch > 10000) { // Only if more than 10 seconds since last fetch
+        fetchContent(true)
+      }
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [lastFetch])
 
   const fetchContent = async (force = false) => {
     if (refreshing && !force) return
@@ -40,22 +55,26 @@ export function ContentDisplay() {
       setError(null)
       const now = Date.now()
       
-      const response = await fetch(`/api/content?_t=${now}`, {
+      const response = await fetch(`/api/content?_t=${now}&_force=${force ? '1' : '0'}`, {
         method: 'GET',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
+          'Pragma': 'no-cache',
+          'If-None-Match': '*'
         }
       })
       
       if (response.ok) {
         const data = await response.json()
+        console.log('Fetched content items:', data.length)
         setContentItems(data)
         setLastFetch(now)
       } else {
+        console.error('Content fetch failed:', response.status)
         setError(`خطا در بارگذاری: ${response.status}`)
       }
     } catch (error) {
+      console.error('Content fetch error:', error)
       setError('خطا در اتصال به سرور')
     } finally {
       setLoading(false)
