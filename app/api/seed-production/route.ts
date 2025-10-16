@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
+  return await seedDatabase()
+}
+
+export async function GET(request: NextRequest) {
+  return await seedDatabase()
+}
+
+async function seedDatabase() {
   try {
     // Add sample content
     await prisma.contentItem.createMany({
