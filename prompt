@@ -1,0 +1,97 @@
+deep audit entire project and find actual brutal all problems of this project actual critical complete and brutal honst and list them this web app hosted in vercel fix it and we will update it in github!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+the contents admin " https://shahzada-aogipsvpt-sayeedbaktash4444-4722s-projects.vercel.app/admin/content " share not shown in dashboard page and shown bellow errors in console it shares youtube videos but not shown pages and facebook pages as team of senior smart expert professional fix all ane ensure admin posts actual complete shown in dashboard page!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+the " https://shahzada-aogipsvpt-sayeedbaktash4444-4722s-projects.vercel.app/admin " and " https://shahzada-aogipsvpt-sayeedbaktash4444-4722s-projects.vercel.app/admin/content " and " https://shahzada-aogipsvpt-sayeedbaktash4444-4722s-projects.vercel.app/sarafs/cmgm64den000hjx04p8ptq7tr " are not responsive and not shown aproperiate in small device deep analyze find problems and fix all actual complete!!!!!!!!!!!!!!!!!
+
+(index):1 Refused to frame ' https://lovable.dev/ ' because it violates the following Content Security Policy directive: "frame-src 'self' https://www.youtube.com https://www.facebook.com https://web.facebook.com https://s.tradingview.com https://www.tradingview.com ".
+
+(index):1  Failed to load resource: the server responded with a status of 400 ()
+
+(index):1 Refused to display ' https://www.facebook.com/ ' in a frame because it set 'X-Frame-Options' to 'deny'.
+
+www-embed-player.js:1857  GET https://static.doubleclick.net/instream/ad_status.js net::ERR_CONNECTION_RESET
+
+yz @ www-embed-player.js:1857
+
+tz @ www-embed-player.js:1854
+
+sz @ www-embed-player.js:1851
+
+wA @ www-embed-player.js:1919
+
+CE @ www-embed-player.js:2313
+
+(anonymous) @ www-embed-player.js:2327
+
+(anonymous) @ Zoz9gvhLgpM:10
+
+www-embed-player.js:1857  GET https://static.doubleclick.net/instream/ad_status.js net::ERR_CONNECTION_RESET
+
+yz @ www-embed-player.js:1857
+
+tz @ www-embed-player.js:1854
+
+sz @ www-embed-player.js:1851
+
+wA @ www-embed-player.js:1919
+
+CE @ www-embed-player.js:2313
+
+(anonymous) @ www-embed-player.js:2327
+
+(anonymous) @ undefined:10
+
+www-embed-player.js:1857  GET https://static.doubleclick.net/instream/ad_status.js net::ERR_CONNECTION_RESET
+
+yz @ www-embed-player.js:1857
+
+tz @ www-embed-player.js:1854
+
+sz @ www-embed-player.js:1851
+
+wA @ www-embed-player.js:1919
+
+CE @ www-embed-player.js:2313
+
+(anonymous) @ www-embed-player.js:2327
+
+(anonymous) @ f_gsPUIpxgI:10
+
+www-embed-player.js:1218  GET https://googleads.g.doubleclick.net/pagead/id net::ERR_QUIC_PROTOCOL_ERROR.QUIC_NETWORK_IDLE_TIMEOUT
+
+Jq @ www-embed-player.js:1218
+
+Nq @ www-embed-player.js:1223
+
+(anonymous) @ www-embed-player.js:1821
+
+Ek @ www-embed-player.js:676
+
+Jy @ www-embed-player.js:1818
+
+Vp @ www-embed-player.js:1840
+
+cz @ www-embed-player.js:1845
+
+iA @ www-embed-player.js:1898
+
+(anonymous) @ www-embed-player.js:2324
+
+or @ fd9d1056-24e22c6ebbb5f7da.js:1
+
+ol @ fd9d1056-24e22c6ebbb5f7da.js:1
+
+or @ fd9d1056-24e22c6ebbb5f7da.js:1
+
+ol @ fd9d1056-24e22c6ebbb5f7da.js:1
+
+or @ fd9d1056-24e22c6ebbb5f7da.js:1
+
+ol @ fd9d1056-24e22c6ebbb5f7da.js:1
+
+or @ fd9d1056-24e22c6ebbb5f7da.js:1
+
+ol @ fd9d1056-24e22c6ebbb5f7da.js:1
+
+or @ fd9d1056-24e22c6ebbb5f7da.js:1

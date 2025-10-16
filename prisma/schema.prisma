@@ -1,0 +1,569 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+enum UserRole {
+  USER
+  SARAF
+  ADMIN
+}
+
+enum SarafStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  WITHDRAWN
+  CANCELLED
+}
+
+enum TransactionType {
+  HAWALA
+  EXCHANGE
+  CRYPTO
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  name        String
+  phone       String?
+  role        UserRole @default(USER)
+  isActive    Boolean  @default(true)
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastLogin   DateTime?
+  
+  // Relations
+  saraf       Saraf?
+  transactions Transaction[]
+  chartDrawings ChartDrawing[]
+  chartLayouts ChartLayout[]
+  watchlists  UserWatchlist[]
+  chartAlerts ChartAlert[]
+  notifications Notification[]
+  chatSessions ChatSession[]
+  courseEnrollments UserCourseEnrollment[]
+  lessonProgress UserLessonProgress[]
+  sarafRatings SarafRating[]
+  
+  @@map("users")
+}
+
+model Saraf {
+  id              String      @id @default(cuid())
+  userId          String      @unique
+  businessName    String
+  businessAddress String
+  businessPhone   String
+  licenseNumber   String?
+  taxNumber       String?
+  status          SarafStatus @default(PENDING)
+  isActive        Boolean     @default(true)
+  isPremium       Boolean     @default(false)
+  premiumExpiry   DateTime?
+  isFeatured      Boolean     @default(false)
+  rating          Float       @default(0)
+  totalTransactions Int       @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relations
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rates           Rate[]
+  transactions    Transaction[]
+  documents       Document[]
+  branches        SarafBranch[]
+  promotionRequests PromotionRequest[]
+  ratings         SarafRating[]
+  
+  @@map("sarafs")
+}
+
+model Rate {
+  id          String   @id @default(cuid())
+  sarafId     String
+  fromCurrency String
+  toCurrency   String
+  buyRate     Float
+  sellRate    Float
+  isActive    Boolean  @default(true)
+  validUntil  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  saraf       Saraf    @relation(fields: [sarafId], references: [id], onDelete: Cascade)
+  
+  @@unique([sarafId, fromCurrency, toCurrency])
+  @@map("rates")
+}
+
+model Transaction {
+  id              String            @id @default(cuid())
+  referenceCode   String            @unique
+  type            TransactionType
+  status          TransactionStatus @default(PENDING)
+  
+  // Parties
+  senderId        String?
+  receiverId      String?
+  sarafId         String
+  handlerId       String?
+  branchId        String?
+  
+  // Transaction Details
+  fromCurrency    String
+  toCurrency      String
+  fromAmount      Float
+  toAmount        Float
+  rate            Float
+  fee             Float             @default(0)
+  
+  // Location Details
+  senderCountry   String?
+  senderCity      String?
+  receiverCountry String            @default("Afghanistan")
+  receiverCity    String
+  
+  // Customer Information
+  senderName      String
+  senderPhone     String
+  receiverName    String
+  receiverPhone   String
+  
+  // Additional Information
+  notes           String?
+  internalNotes   String?
+  completedAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  // Relations
+  sender          User?             @relation(fields: [senderId], references: [id])
+  saraf           Saraf             @relation(fields: [sarafId], references: [id])
+  branch          SarafBranch?      @relation(fields: [branchId], references: [id])
+  
+  @@map("transactions")
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  sarafId     String
+  type        String   // "license", "tax", "id", "bank"
+  filename    String
+  originalName String
+  url         String
+  size        Int
+  mimeType    String
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  saraf       Saraf    @relation(fields: [sarafId], references: [id], onDelete: Cascade)
+  
+  @@map("documents")
+}
+
+model MarketData {
+  id          String   @id @default(cuid())
+  symbol      String
+  type        String   // "crypto", "forex", "commodity"
+  name        String
+  price       Float
+  change24h   Float
+  changePercent24h Float
+  volume24h   Float?
+  marketCap   Float?
+  lastUpdate  DateTime @default(now())
+  
+  @@unique([symbol, type])
+  @@map("market_data")
+}
+
+model SystemConfig {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+  
+  @@map("system_config")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String
+  resource    String
+  resourceId  String?
+  details     String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  @@map("audit_logs")
+}
+
+model ChartDrawing {
+  id          String   @id @default(cuid())
+  userId      String
+  symbol      String
+  timeframe   String
+  drawingType String   // "line", "rectangle", "circle", "arrow", etc.
+  drawingData String   // JSON data for the drawing
+  name        String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, symbol, timeframe, name])
+  @@map("chart_drawings")
+}
+
+model ChartLayout {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  symbol      String
+  timeframe   String
+  chartType   String   @default("candlestick")
+  indicators  String   // JSON array of enabled indicators
+  settings    String   // JSON object of chart settings
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, name])
+  @@map("chart_layouts")
+}
+
+model Asset {
+  id            String   @id @default(cuid())
+  symbol        String   @unique
+  name          String
+  type          String   // "crypto", "forex", "commodity", "stock"
+  category      String?  // "major", "minor", "exotic" for forex, etc.
+  exchange      String?
+  baseAsset     String?
+  quoteAsset    String?
+  isActive      Boolean  @default(true)
+  minPrice      Float?
+  maxPrice      Float?
+  priceStep     Float?
+  volumeStep    Float?
+  description   String?
+  website       String?
+  logoUrl       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  priceHistory  PriceHistory[]
+  watchlists    UserWatchlist[]
+  
+  @@map("assets")
+}
+
+model PriceHistory {
+  id        String   @id @default(cuid())
+  assetId   String
+  symbol    String
+  timeframe String   // "1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"
+  timestamp DateTime
+  open      Float
+  high      Float
+  low       Float
+  close     Float
+  volume    Float?
+  
+  // Relations
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  
+  @@unique([symbol, timeframe, timestamp])
+  @@index([symbol, timeframe, timestamp])
+  @@map("price_history")
+}
+
+model UserWatchlist {
+  id        String   @id @default(cuid())
+  userId    String
+  assetId   String
+  name      String?  // Custom name for the watchlist item
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, assetId])
+  @@map("user_watchlists")
+}
+
+model ChartAlert {
+  id          String   @id @default(cuid())
+  userId      String
+  symbol      String
+  name        String
+  condition   String   // "above", "below", "crosses_up", "crosses_down"
+  targetPrice Float
+  message     String?
+  isActive    Boolean  @default(true)
+  isTriggered Boolean  @default(false)
+  triggeredAt DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("chart_alerts")
+}
+
+model SarafBranch {
+  id          String   @id @default(cuid())
+  sarafId     String
+  name        String
+  address     String
+  phone       String
+  city        String
+  country     String   @default("Afghanistan")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  saraf       Saraf    @relation(fields: [sarafId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  
+  @@map("saraf_branches")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  message     String
+  type        String   @default("info") // "info", "success", "warning", "error", "transaction"
+  action      String?  // Action type for categorization
+  resource    String?  // Resource type
+  resourceId  String?  // Related resource ID
+  data        String?  // JSON data
+  read        Boolean  @default(false)
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("notifications")
+}
+
+model PromotionRequest {
+  id            String   @id @default(cuid())
+  sarafId       String
+  type          String   // "PREMIUM", "FEATURED"
+  duration      Int      // Duration in days
+  amount        Float    // Amount to pay in AFN
+  paymentMethod String   // "CASH", "BANK_TRANSFER", "HAWALA"
+  paymentProof  String?  // Optional payment proof URL
+  status        String   @default("PENDING") // "PENDING", "APPROVED", "REJECTED", "PAID"
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  expiresAt     DateTime?
+  
+  // Relations
+  saraf         Saraf    @relation(fields: [sarafId], references: [id], onDelete: Cascade)
+  
+  @@map("promotion_requests")
+}
+
+model ContentItem {
+  id          String   @id @default(cuid())
+  title       String
+  type        String   // "IFRAME", "VIDEO", "FACEBOOK", "ANNOUNCEMENT"
+  content     String   // Content or description
+  url         String?  // URL for iframe, video, or Facebook
+  position    String   @default("DASHBOARD") // "DASHBOARD", "SIDEBAR", "HEADER", "FOOTER"
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("content_items")
+}
+
+model ChatSession {
+  id          String   @id @default(cuid())
+  userId      String
+  sarafId     String?  // Optional: for saraf-user chats
+  type        String   @default("SUPPORT") // "SUPPORT" for admin-user, "SARAF" for saraf-user
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    ChatMessage[]
+  
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  sessionId   String
+  senderId    String
+  senderName  String
+  senderRole  String
+  message     String
+  fileUrl     String?
+  timestamp   DateTime @default(now())
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  session     ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  @@map("chat_messages")
+}
+
+model EducationCourse {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  category      String   // "finance", "crypto", "trading", "security"
+  level         String   // "beginner", "intermediate", "advanced"
+  duration      Int      // Duration in minutes
+  price         Float    @default(0) // 0 for free courses
+  isPremium     Boolean  @default(false)
+  isPublished   Boolean  @default(false)
+  thumbnailUrl  String?
+  videoUrl      String?  // YouTube URL
+  content       String   // Course content in markdown
+  tags          String   // JSON array of tags
+  rating        Float    @default(0)
+  enrollments   Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  lessons       EducationLesson[]
+  enrollments_rel UserCourseEnrollment[]
+  
+  @@map("education_courses")
+}
+
+model EducationLesson {
+  id          String   @id @default(cuid())
+  courseId    String
+  title       String
+  description String?
+  content     String   // Lesson content
+  videoUrl    String?  // YouTube URL
+  duration    Int      // Duration in minutes
+  order       Int      // Lesson order in course
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  course      EducationCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress    UserLessonProgress[]
+  
+  @@map("education_lessons")
+}
+
+model UserCourseEnrollment {
+  id          String   @id @default(cuid())
+  userId      String
+  courseId    String
+  progress    Float    @default(0) // Progress percentage
+  isCompleted Boolean  @default(false)
+  completedAt DateTime?
+  enrolledAt  DateTime @default(now())
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      EducationCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, courseId])
+  @@map("user_course_enrollments")
+}
+
+model UserLessonProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  lessonId    String
+  isCompleted Boolean  @default(false)
+  completedAt DateTime?
+  watchTime   Int      @default(0) // Watch time in seconds
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      EducationLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, lessonId])
+  @@map("user_lesson_progress")
+}
+
+model TechNews {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  content     String?
+  url         String   @unique
+  source      String   // Source website name
+  category    String   // "technology", "crypto", "finance", "startup"
+  language    String   @default("fa") // "fa" for Persian, "en" for English
+  imageUrl    String?
+  publishedAt DateTime
+  isActive    Boolean  @default(true)
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("tech_news")
+}
+
+model SarafRating {
+  id          String   @id @default(cuid())
+  userId      String
+  sarafId     String
+  rating      Int      // 1-5 stars
+  comment     String?
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  saraf       Saraf    @relation(fields: [sarafId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, sarafId])
+  @@map("saraf_ratings")
+}

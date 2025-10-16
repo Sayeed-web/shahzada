@@ -1,0 +1,42 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const data = await request.json()
+    
+    const item = await prisma.contentItem.update({
+      where: { id: params.id },
+      data: {
+        title: data.title,
+        type: data.type,
+        content: data.content,
+        url: data.url || null,
+        position: data.position || 'DASHBOARD',
+        isActive: data.isActive ?? true
+      }
+    })
+    
+    return NextResponse.json(item)
+  } catch (error) {
+    return NextResponse.json({ error: 'خطا در بروزرسانی محتوا' }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await prisma.contentItem.delete({
+      where: { id: params.id }
+    })
+    
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return NextResponse.json({ error: 'خطا در حذف محتوا' }, { status: 500 })
+  }
+}

@@ -1,0 +1,606 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Persian/Farsi RTL Support */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Persian Number Styling */
+.persian-numbers {
+  font-family: 'Vazir', 'Tahoma', sans-serif;
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
+/* Line Clamp Utility */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* News Card Hover Effects */
+.news-card {
+  transition: all 0.3s ease;
+}
+
+.news-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.news-card:hover .news-image {
+  transform: scale(1.05);
+}
+
+.news-image {
+  transition: transform 0.3s ease;
+}
+
+/* Loading Animation */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Persian Font Loading */
+@font-face {
+  font-family: 'Vazir';
+  src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/Vazir-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Vazir';
+  src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/Vazir-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Apply Persian font to body */
+body {
+  font-family: 'Vazir', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Education Page Specific Styles */
+.education-hero {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 3rem 0;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.tech-news-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.course-card {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.course-card:hover {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .tech-news-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .education-hero {
+    padding: 1.5rem 1rem;
+  }
+  
+  .education-hero h1 {
+    font-size: 1.75rem;
+  }
+  
+  /* Mobile-first responsive utilities */
+  .mobile-text-sm {
+    font-size: 0.875rem;
+  }
+  
+  .mobile-p-2 {
+    padding: 0.5rem;
+  }
+  
+  .mobile-gap-2 {
+    gap: 0.5rem;
+  }
+  
+  .mobile-h-12 {
+    height: 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .education-hero h1 {
+    font-size: 1.5rem;
+  }
+  
+  .mobile-text-xs {
+    font-size: 0.75rem;
+  }
+  
+  .mobile-p-1 {
+    padding: 0.25rem;
+  }
+  
+  .mobile-gap-1 {
+    gap: 0.25rem;
+  }
+  
+  .mobile-h-10 {
+    height: 2.5rem;
+  }
+}
+
+/* Container responsive padding */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+/* Dark Mode Adjustments */
+.dark .news-card:hover {
+  box-shadow: 0 10px 25px rgba(255, 255, 255, 0.1);
+}
+
+.dark .course-card:hover {
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+}
+
+/* Animation Classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Badge Improvements */
+.badge-tech {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.badge-crypto {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.badge-finance {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+.badge-security {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  color: white;
+}
+
+/* TradingView Widget Styles */
+.tradingview-widget-container {
+  width: 100% !important;
+  height: 100% !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Mobile TradingView adjustments */
+@media (max-width: 640px) {
+  .tradingview-widget-container {
+    min-height: 400px;
+  }
+  
+  .tradingview-loading {
+    height: 400px;
+  }
+  
+  .tradingview-error {
+    height: 400px;
+    padding: 1rem;
+  }
+}
+
+/* Mobile table improvements */
+@media (max-width: 768px) {
+  .mobile-table-stack {
+    display: block;
+  }
+  
+  .mobile-table-stack tbody,
+  .mobile-table-stack tr,
+  .mobile-table-stack td {
+    display: block;
+    width: 100%;
+  }
+  
+  .mobile-table-stack tr {
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+  }
+  
+  .mobile-table-stack td {
+    border: none;
+    padding: 0.25rem 0;
+  }
+  
+  .mobile-table-stack td:before {
+    content: attr(data-label) ": ";
+    font-weight: bold;
+    display: inline-block;
+    width: 100px;
+  }
+}
+
+/* Admin page responsive utilities */
+.admin-header {
+  @apply flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4;
+}
+
+.admin-title {
+  @apply text-xl sm:text-2xl font-bold flex items-center gap-2;
+}
+
+.admin-subtitle {
+  @apply text-sm sm:text-base text-muted-foreground;
+}
+
+.admin-actions {
+  @apply flex flex-col sm:flex-row gap-2 w-full sm:w-auto;
+}
+
+.mobile-card {
+  @apply block sm:hidden p-4 border rounded-lg space-y-2;
+}
+
+.desktop-table {
+  @apply hidden sm:table;
+}
+
+.tradingview-widget-container__widget {
+  width: 100% !important;
+  height: 100% !important;
+  position: relative;
+}
+
+/* TradingView iframe styling */
+.tradingview-widget-container iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  border-radius: 8px !important;
+}
+
+/* Loading state for TradingView */
+.tradingview-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 600px;
+  background: hsl(var(--muted));
+  border-radius: 8px;
+  color: hsl(var(--muted-foreground));
+}
+
+/* TradingView error state */
+.tradingview-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 600px;
+  background: hsl(var(--destructive) / 0.1);
+  border: 1px solid hsl(var(--destructive));
+  border-radius: 8px;
+  color: hsl(var(--destructive));
+  text-align: center;
+  padding: 2rem;
+}
+
+/* Button responsive sizing */
+.btn-responsive {
+  @apply h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3;
+}
+
+.btn-responsive .btn-icon {
+  @apply h-3 w-3 sm:h-4 sm:w-4;
+}
+
+.btn-responsive .btn-text {
+  @apply hidden sm:inline ml-2;
+}
+
+/* Mobile touch targets */
+@media (max-width: 640px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .mobile-spacing {
+    padding: 0.5rem;
+    margin: 0.25rem;
+  }
+  
+  .mobile-text {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  .mobile-card {
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+  }
+  
+  .mobile-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .mobile-flex {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .xs-text {
+    font-size: 0.75rem;
+  }
+  
+  .xs-padding {
+    padding: 0.25rem;
+  }
+  
+  .xs-margin {
+    margin: 0.125rem;
+  }
+}
+
+/* Global responsive container */
+.responsive-container {
+  @apply w-full max-w-none px-2 sm:px-4 lg:px-6 xl:max-w-7xl xl:mx-auto;
+}
+
+/* Responsive text scaling */
+.responsive-title {
+  @apply text-lg sm:text-xl lg:text-2xl xl:text-3xl;
+}
+
+.responsive-subtitle {
+  @apply text-sm sm:text-base lg:text-lg;
+}
+
+.responsive-body {
+  @apply text-xs sm:text-sm lg:text-base;
+}
+
+/* Responsive spacing */
+.responsive-spacing {
+  @apply space-y-2 sm:space-y-4 lg:space-y-6;
+}
+
+.responsive-padding {
+  @apply p-2 sm:p-4 lg:p-6;
+}
+
+.responsive-margin {
+  @apply m-2 sm:m-4 lg:m-6;
+}
+
+/* Responsive grid */
+.responsive-grid-1-2 {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 lg:gap-6;
+}
+
+.responsive-grid-1-2-3 {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-6;
+}
+
+.responsive-grid-1-2-4 {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4 lg:gap-6;
+}
+
+/* Responsive flex */
+.responsive-flex {
+  @apply flex flex-col sm:flex-row gap-2 sm:gap-4 lg:gap-6;
+}
+
+/* Force responsive behavior */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+  min-width: 320px;
+}
+
+/* Prevent horizontal scroll */
+.prevent-overflow {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Responsive tables */
+table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+th, td {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
