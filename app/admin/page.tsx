@@ -57,20 +57,41 @@ export default function AdminPage() {
             if (res.status === 503) {
               throw new Error('Database connection failed. Please check system status.')
             }
+            if (res.status === 500) {
+              throw new Error('Server error. Using fallback data.')
+            }
             throw new Error(`Server error: ${res.status}`)
           }
           return res.json()
         })
         .then(data => {
-          if (data.error) {
+          if (data.error && !data.fallback) {
             throw new Error(data.message || 'Failed to load statistics')
           }
+          
+          // Use fallback data if available
+          if (data.fallback) {
+            console.warn('Using fallback admin stats data')
+          }
+          
           setStats(data)
           setIsLoading(false)
         })
         .catch(error => {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
           console.error('Failed to fetch admin stats:', errorMessage)
+          
+          // Set fallback stats on error
+          setStats({
+            totalUsers: 0,
+            totalSarafs: 0,
+            pendingSarafs: 0,
+            totalTransactions: 0,
+            pendingTransactions: 0,
+            totalVolume: 0,
+            systemHealth: 'warning'
+          })
+          
           setError(errorMessage)
           setIsLoading(false)
         })

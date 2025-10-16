@@ -146,8 +146,16 @@ export default function AdminContentPage() {
     }
   }
 
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
+
   const handleDelete = async (id: string) => {
     if (!confirm('آیا از حذف این محتوا اطمینان دارید؟')) return
+
+    // Prevent multiple deletion attempts
+    if (deletingIds.has(id)) {
+      toast.warning('در حال حذف...')
+      return
+    }
 
     const itemToDelete = contentItems.find(item => item.id === id)
     if (!itemToDelete) {
@@ -156,6 +164,9 @@ export default function AdminContentPage() {
     }
 
     try {
+      // Mark as deleting
+      setDeletingIds(prev => new Set([...prev, id]))
+      
       // Remove from UI immediately for better UX
       setContentItems(prev => prev.filter(item => item.id !== id))
       
@@ -212,6 +223,13 @@ export default function AdminContentPage() {
         return prev
       })
       toast.error('خطا در حذف محتوا: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    } finally {
+      // Remove from deleting set
+      setDeletingIds(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(id)
+        return newSet
+      })
     }
   }
 
@@ -450,10 +468,13 @@ export default function AdminContentPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDelete(item.id)}
+                            disabled={deletingIds.has(item.id)}
                             className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                           >
                             <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                            <span className="hidden sm:inline ml-2">حذف</span>
+                            <span className="hidden sm:inline ml-2">
+                              {deletingIds.has(item.id) ? 'در حال حذف...' : 'حذف'}
+                            </span>
                           </Button>
                         </div>
                       </TableCell>
