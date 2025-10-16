@@ -34,6 +34,7 @@
     "docker:stop": "docker-compose down",
     "postinstall": "prisma generate",
     "seed:courses": "tsx scripts/seedPersianCourses.ts",
+    "clear-limits": "node clear-rate-limits.js",
     "vercel-build": "prisma generate && prisma db push && next build"
   },
   "dependencies": {

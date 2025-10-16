@@ -69,7 +69,7 @@ export default withAuth(
         limit = 10
         windowMs = 60 * 60 * 1000 // 1 hour
       } else if (pathname.startsWith('/api/admin')) {
-        limit = 50
+        limit = 200
         windowMs = 5 * 60 * 1000 // 5 minutes
       }
       

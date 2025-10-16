@@ -67,14 +67,14 @@ export function AdminFloatingChatButton() {
         setLoading(false)
       })
       
-      // Poll for updates every 5 seconds for real-time experience
+      // Poll for updates every 30 seconds to avoid rate limits
       const interval = setInterval(() => {
         fetchUnreadCount()
         fetchRecentMessages()
         if (activeTab === 'sessions') {
           fetchActiveSessions()
         }
-      }, 5000)
+      }, 30000)
       
       return () => clearInterval(interval)
     }
@@ -95,6 +95,9 @@ export function AdminFloatingChatButton() {
         const data = await response.json()
         setUnreadCount(data.count || 0)
         setError(null)
+      } else if (response.status === 429) {
+        console.warn('Rate limit exceeded for unread count, skipping update')
+        return // Don't update error state on rate limit
       } else {
         console.error('Unread count API failed:', response.status)
         setUnreadCount(0)
@@ -125,6 +128,9 @@ export function AdminFloatingChatButton() {
         )
         setRecentMessages(realMessages)
         setError(null)
+      } else if (response.status === 429) {
+        console.warn('Rate limit exceeded for recent messages, skipping update')
+        return // Don't update error state on rate limit
       } else {
         console.error('API failed with status:', response.status)
         setRecentMessages([])
@@ -154,6 +160,9 @@ export function AdminFloatingChatButton() {
         )
         setActiveSessions(realSessions)
         setError(null)
+      } else if (response.status === 429) {
+        console.warn('Rate limit exceeded for active sessions, skipping update')
+        return // Don't update error state on rate limit
       } else {
         console.error('Sessions API failed with status:', response.status)
         setActiveSessions([])

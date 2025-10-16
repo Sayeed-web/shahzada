@@ -34,6 +34,7 @@ interface ChatSession {
 export function AdminMessagingDashboard() {
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [loading, setLoading] = useState(true)
+  const [lastFetch, setLastFetch] = useState(0)
   const [stats, setStats] = useState({
     totalSessions: 0,
     unreadMessages: 0,
@@ -44,6 +45,13 @@ export function AdminMessagingDashboard() {
   useEffect(() => {
     fetchRecentSessions()
     fetchMessagingStats()
+    
+    // Set up periodic refresh every 30 seconds instead of on every render
+    const interval = setInterval(() => {
+      fetchMessagingStats()
+    }, 30000)
+    
+    return () => clearInterval(interval)
   }, [])
 
   const fetchRecentSessions = async () => {
@@ -64,11 +72,23 @@ export function AdminMessagingDashboard() {
   }
 
   const fetchMessagingStats = async () => {
+    const now = Date.now()
+    // Debounce: don't fetch if less than 10 seconds since last fetch
+    if (now - lastFetch < 10000) {
+      return
+    }
+    
+    setLastFetch(now)
+    
     try {
       const response = await fetch('/api/admin/chat/stats')
       if (response.ok) {
         const data = await response.json()
         setStats(data)
+      } else if (response.status === 429) {
+        console.warn('Rate limit exceeded, skipping stats update')
+        // Don't reset stats on rate limit, keep existing data
+        return
       } else {
         setStats({
           totalSessions: 0,
