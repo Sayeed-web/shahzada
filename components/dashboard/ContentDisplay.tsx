@@ -28,13 +28,18 @@ export function ContentDisplay() {
   useEffect(() => {
     fetchContent()
     
-    // Refresh content every 30 seconds to avoid rate limits
-    const interval = setInterval(() => fetchContent(), 30000)
+    // Refresh content every 60 seconds to avoid rate limits
+    const interval = setInterval(() => {
+      const timeSinceLastFetch = Date.now() - lastFetch
+      if (timeSinceLastFetch > 30000) { // Only if more than 30 seconds since last fetch
+        fetchContent()
+      }
+    }, 60000)
     
     // Refresh when window gains focus (user returns to tab)
     const handleFocus = () => {
       const timeSinceLastFetch = Date.now() - lastFetch
-      if (timeSinceLastFetch > 10000) { // Only if more than 10 seconds since last fetch
+      if (timeSinceLastFetch > 15000) { // Only if more than 15 seconds since last fetch
         fetchContent(true)
       }
     }
@@ -45,7 +50,7 @@ export function ContentDisplay() {
       clearInterval(interval)
       window.removeEventListener('focus', handleFocus)
     }
-  }, [lastFetch])
+  }, [])
 
   const fetchContent = async (force = false) => {
     if (refreshing && !force) return
@@ -55,23 +60,32 @@ export function ContentDisplay() {
       setError(null)
       const now = Date.now()
       
-      const response = await fetch(`/api/content?_t=${now}&_force=${force ? '1' : '0'}`, {
+      const response = await fetch(`/api/content?_t=${now}&_r=${Math.random()}`, {
         method: 'GET',
         headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
           'Pragma': 'no-cache',
-          'If-None-Match': '*'
+          'Expires': '0'
         }
       })
       
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Fetched content items:', data.length)
-        setContentItems(data)
-        setLastFetch(now)
+      // Handle 304 Not Modified as success (content unchanged)
+      if (response.ok || response.status === 304) {
+        if (response.status === 304) {
+          console.log('Content unchanged (304)')
+          setLastFetch(now)
+        } else {
+          const data = await response.json()
+          console.log('Fetched content items:', data.length)
+          setContentItems(data)
+          setLastFetch(now)
+        }
       } else {
         console.error('Content fetch failed:', response.status)
-        setError(`خطا در بارگذاری: ${response.status}`)
+        // Don't set error for common HTTP status codes that aren't critical
+        if (response.status !== 429 && response.status !== 304) {
+          setError(`خطا در بارگذاری: ${response.status}`)
+        }
       }
     } catch (error) {
       console.error('Content fetch error:', error)

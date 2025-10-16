@@ -92,6 +92,15 @@ export default withAuth(
     response.headers.delete('X-Frame-Options')
     response.headers.delete('Content-Security-Policy')
     
+    // Add cache-busting headers for API routes
+    if (isAPIPath) {
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0, private')
+      response.headers.set('Pragma', 'no-cache')
+      response.headers.set('Expires', '0')
+      response.headers.set('Last-Modified', new Date().toUTCString())
+      response.headers.set('ETag', `"${Date.now()}-${Math.random()}"`)
+    }
+    
     // Content Security Policy for uploads only
     if (pathname.startsWith('/uploads/')) {
       response.headers.set('Content-Disposition', 'attachment')

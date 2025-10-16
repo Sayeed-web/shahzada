@@ -49,18 +49,31 @@ export default function AdminContentPage() {
 
   const fetchContentItems = async () => {
     try {
-      const response = await fetch(`/api/admin/content?_t=${Date.now()}`, {
+      setLoading(true)
+      const response = await fetch(`/api/admin/content?_t=${Date.now()}&_r=${Math.random()}`, {
+        method: 'GET',
         headers: {
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         }
       })
-      if (!response.ok) throw new Error('Failed to fetch content')
+      
+      if (!response.ok && response.status !== 304) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+      if (response.status === 304) {
+        console.log('Content unchanged (304)')
+        return
+      }
+      
       const data = await response.json()
-      console.log('Fetched content items:', data.length)
+      console.log('Admin fetched content items:', data.length)
       setContentItems(data)
     } catch (error) {
-      console.error('Fetch error:', error)
-      toast.error('خطا در بارگذاری محتوا')
+      console.error('Admin fetch error:', error)
+      toast.error('خطا در بارگذاری محتوا: ' + (error instanceof Error ? error.message : 'Unknown'))
     } finally {
       setLoading(false)
     }
@@ -68,6 +81,12 @@ export default function AdminContentPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!formData.title.trim() || !formData.type) {
+      toast.error('عنوان و نوع محتوا الزامی است')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -80,18 +99,30 @@ export default function AdminContentPage() {
 
       const response = await fetch('/api/admin/content', {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
         body: JSON.stringify(body)
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        console.error('API Error:', errorData)
-        throw new Error(errorData.error || 'Failed to save content')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('API Error:', response.status, errorData)
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
       }
 
       const result = await response.json()
       console.log('Save result:', result)
+      
+      // Update local state immediately
+      if (editingItem) {
+        setContentItems(prev => prev.map(item => 
+          item.id === editingItem.id ? { ...item, ...formData } : item
+        ))
+      } else {
+        setContentItems(prev => [result, ...prev])
+      }
       
       // Clear cache
       try {
@@ -105,8 +136,8 @@ export default function AdminContentPage() {
       setEditingItem(null)
       resetForm()
       
-      // Refresh content list
-      setTimeout(() => fetchContentItems(), 500)
+      // Refresh from server after a short delay
+      setTimeout(() => fetchContentItems(), 1000)
     } catch (error) {
       console.error('Save error:', error)
       toast.error('خطا در ذخیره محتوا: ' + (error instanceof Error ? error.message : 'Unknown error'))
@@ -118,25 +149,44 @@ export default function AdminContentPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('آیا از حذف این محتوا اطمینان دارید؟')) return
 
+    const itemToDelete = contentItems.find(item => item.id === id)
+    if (!itemToDelete) {
+      toast.error('محتوا یافت نشد')
+      return
+    }
+
     try {
-      setLoading(true)
+      // Remove from UI immediately for better UX
+      setContentItems(prev => prev.filter(item => item.id !== id))
       
-      // First try the admin content API
-      const response = await fetch(`/api/admin/content?id=${id}`, {
-        method: 'DELETE'
+      console.log('Deleting content:', id, itemToDelete.title)
+      
+      // Try the admin content API first
+      let response = await fetch(`/api/admin/content?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
       })
 
       if (!response.ok) {
+        console.log('Admin API failed, trying individual API')
         // Try the individual content API as fallback
-        const fallbackResponse = await fetch(`/api/admin/content/${id}`, {
-          method: 'DELETE'
+        response = await fetch(`/api/admin/content/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
         })
         
-        if (!fallbackResponse.ok) {
-          const errorData = await fallbackResponse.json()
-          throw new Error(errorData.error || 'Failed to delete content')
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+          throw new Error(errorData.error || `HTTP ${response.status}: Failed to delete`)
         }
       }
+      
+      const result = await response.json()
+      console.log('Delete result:', result)
       
       // Clear cache
       try {
@@ -145,18 +195,23 @@ export default function AdminContentPage() {
         console.warn('Cache clear failed:', cacheError)
       }
 
-      toast.success('محتوا حذف شد')
+      toast.success(`محتوا "${itemToDelete.title}" حذف شد`)
       
-      // Remove from local state immediately
-      setContentItems(prev => prev.filter(item => item.id !== id))
-      
-      // Refresh from server
-      setTimeout(() => fetchContentItems(), 500)
+      // Refresh from server after a delay to confirm deletion
+      setTimeout(() => fetchContentItems(), 1000)
     } catch (error) {
       console.error('Delete error:', error)
+      // Restore item to UI if deletion failed
+      setContentItems(prev => {
+        const exists = prev.find(item => item.id === id)
+        if (!exists) {
+          return [...prev, itemToDelete].sort((a, b) => 
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
+        }
+        return prev
+      })
       toast.error('خطا در حذف محتوا: ' + (error instanceof Error ? error.message : 'Unknown error'))
-    } finally {
-      setLoading(false)
     }
   }
 
