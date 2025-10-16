@@ -61,12 +61,7 @@ export default function MobileAppPage() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button size="lg" className="flex items-center gap-2" onClick={() => {
-                    const link = document.createElement('a')
-                    link.href = '/shahzada.apk'
-                    link.download = 'shahzada.apk'
-                    document.body.appendChild(link)
-                    link.click()
-                    document.body.removeChild(link)
+                    window.open('https://drive.google.com/uc?export=download&id=1A3MYoHV4jXa1RDN-EY9ZfC76Zew9uZxi', '_blank')
                   }}>
                     <Download className="h-5 w-5" />
                     دانلود برای اندروید
